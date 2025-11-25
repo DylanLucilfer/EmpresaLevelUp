@@ -9,7 +9,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/products")
-@CrossOrigin(origins = "*") 
+@CrossOrigin(origins = "*") // ¡Permite que React se conecte desde cualquier puerto!
 public class ProductController {
 
     @Autowired
@@ -23,41 +23,25 @@ public class ProductController {
 
     // GET: Traer un producto por ID
     @GetMapping("/{id}")
-    public Product getProductById(@PathVariable Long id) {
+    public Product getProductById(@PathVariable long id) {
         return productService.getProductById(id);
     }
 
     // POST: Crear un nuevo producto
     @PostMapping
     public Product createProduct(@RequestBody Product product) {
-        // Por defecto, un producto nuevo empieza con 0 ventas
-        if (product.getVendidos() == null) {
-            product.setVendidos(0);
-        }
-        return productService.saveProduct(product);
+        return productService.createProduct(product);
     }
 
     // PUT: Actualizar un producto existente
     @PutMapping("/{id}")
-    public Product updateProduct(@PathVariable Long id, @RequestBody Product productDetails) {
-        Product existingProduct = productService.getProductById(id);
-
-        if (existingProduct != null) {
-            // Actualizamos los campos con los nuevos datos
-            existingProduct.setNombre(productDetails.getNombre());
-            existingProduct.setCategoria(productDetails.getCategoria());
-            existingProduct.setPrecio(productDetails.getPrecio());
-            existingProduct.setImagen(productDetails.getImagen());
-            existingProduct.setDescripcion(productDetails.getDescripcion());
-            
-            return productService.saveProduct(existingProduct);
-        }
-        return null;
+    public Product updateProduct(@PathVariable long id, @RequestBody Product productDetails) {
+        return productService.updateProduct(id, productDetails);
     }
 
     // DELETE: Borrar un producto
     @DeleteMapping("/{id}")
-    public void deleteProduct(@PathVariable Long id) {
+    public void deleteProduct(@PathVariable long id) {
         productService.deleteProduct(id);
     }
 }

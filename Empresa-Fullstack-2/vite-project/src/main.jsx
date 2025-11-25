@@ -18,6 +18,7 @@ import Confirmacion from './components/Confirmacion.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 
 import { CartProvider } from './context/CartContext.jsx';
+import { AuthProvider } from './context/AuthContext.jsx';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js'; 
 import './estilo.css'; 
@@ -33,7 +34,6 @@ const router = createBrowserRouter([
       { path: "/nosotros", element: <Nosotros /> },
       { path: "/contacto", element: <Contacto /> },
 
-      { path: "/admin", element: <AdminProducts /> },
       { path: "/registro", element: <Registro /> },
       { path: "/login", element: <Login /> },
       { path: "/carrito", element: <Carrito /> },
@@ -41,9 +41,9 @@ const router = createBrowserRouter([
       { path: "/confirmacion", element: <Confirmacion /> },
       {
         path: "/admin",
-        element: <ProtectedRoute />,
+        element: <ProtectedRoute roles={['ROLE_ADMIN']} />,
         children: [
-          { path: "", element: <AdminProducts /> }
+          { index: true, element: <AdminProducts /> }
         ]
       }
     ]
@@ -51,8 +51,10 @@ const router = createBrowserRouter([
 ]);
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <CartProvider>
-      <RouterProvider router={router} />
-    </CartProvider>
+    <AuthProvider>
+      <CartProvider>
+        <RouterProvider router={router} />
+      </CartProvider>
+    </AuthProvider>
   </React.StrictMode>,
 );

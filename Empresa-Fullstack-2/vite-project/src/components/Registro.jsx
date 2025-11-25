@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 function Registro() {
   const [nombre, setNombre] = useState('');
@@ -7,10 +8,12 @@ function Registro() {
   const [password, setPassword] = useState('');
   const [fechaNacimiento, setFechaNacimiento] = useState('');
   const [mensaje, setMensaje] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
   
   const navigate = useNavigate(); 
+  const { register } = useAuth();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault(); 
     const hoy = new Date();
     const fechaNac = new Date(fechaNacimiento);
@@ -25,19 +28,19 @@ function Registro() {
       return;
     }
     const descuento = email.endsWith("@ducouc.cl");
-    const usuario = {
-      nombre,
-      email,
-      password,
-      fechaNacimiento,
-      descuento
-    };
-    localStorage.setItem("usuario", JSON.stringify(usuario));
-    setMensaje({ tipo: 'success', texto: '✅ ¡Registro exitoso! ' + (descuento ? 'Tienes descuento 🎉' : '') });
 
-    setTimeout(() => {
-      navigate('/login');
-    }, 1500);
+    try {
+      setSubmitting(true);
+      await register({ username: email.trim(), password, role: 'ROLE_USER' });
+      const extra = descuento ? 'Tienes descuento 🎉' : '';
+      setMensaje({ tipo: 'success', texto: `✅ ¡Registro exitoso, ${nombre}! ${extra}`.trim() });
+      setTimeout(() => navigate('/'), 1500);
+    } catch (error) {
+      const apiMessage = error?.response?.data?.error || '❌ No se pudo completar el registro.';
+      setMensaje({ tipo: 'danger', texto: apiMessage });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -84,7 +87,9 @@ function Registro() {
             required
           />
         </div>
-        <button type="submit" className="btn btn-primary">Registrarse</button>
+        <button type="submit" className="btn btn-primary" disabled={submitting}>
+          {submitting ? 'Registrando...' : 'Registrarse'}
+        </button>
       </form>
       {mensaje && (
         <div className={`alert alert-${mensaje.tipo} mt-3`}>

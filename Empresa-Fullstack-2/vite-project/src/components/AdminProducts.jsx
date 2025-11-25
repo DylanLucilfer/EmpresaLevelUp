@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 // 1. Importamos el Servicio
 import ProductService from '../services/ProductService';
+import { useAuth } from '../context/AuthContext';
 
 function AdminProducts() {
   const [products, setProducts] = useState([]);
@@ -11,17 +12,21 @@ function AdminProducts() {
   const [imagen, setImagen] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [editingId, setEditingId] = useState(null);
+  const { permissions } = useAuth();
+  const canManageCatalog = permissions.canManageCatalog;
 
   // Cargar productos al inicio
-  useEffect(() => {
-    loadProducts();
-  }, []);
-
-  const loadProducts = () => {
+  const loadProducts = useCallback(() => {
     ProductService.getAllProducts()
       .then(res => setProducts(res.data))
       .catch(err => console.error(err));
-  };
+  }, []);
+
+  useEffect(() => {
+    if (canManageCatalog) {
+      loadProducts();
+    }
+  }, [canManageCatalog, loadProducts]);
 
   const resetForm = () => {
     setNombre(''); setCategoria(''); setPrecio(0); setImagen(''); setDescripcion(''); setEditingId(null);
@@ -66,6 +71,16 @@ function AdminProducts() {
     setDescripcion(product.descripcion);
     window.scrollTo(0, 0);
   };
+
+  if (!canManageCatalog) {
+    return (
+      <div className="container mt-5">
+        <div className="alert alert-danger" role="alert">
+          No tenés permisos para administrar el catálogo.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mt-5">

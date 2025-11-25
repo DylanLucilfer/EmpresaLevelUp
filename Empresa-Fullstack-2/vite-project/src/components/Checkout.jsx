@@ -1,23 +1,24 @@
 import React, { useEffect } from 'react';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 
 function Checkout() {
   const { carrito, totalPrecio, vaciarCarrito } = useCart();
+  const { permissions, user } = useAuth();
+  const canCheckout = permissions.canCheckout;
   const navigate = useNavigate();
   const fmtCLP = new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 });
   useEffect(() => {
-    const sesionActiva = localStorage.getItem("sesion") === "true";
-    if (!sesionActiva) {
+    if (!canCheckout) {
       navigate('/login');
     }
-  }, [navigate]);
+  }, [canCheckout, navigate]);
   const handleConfirmOrder = () => {
-    const usuario = JSON.parse(localStorage.getItem("usuario"));
     const newOrder = {
       id: `order_${Date.now()}`,
       fecha: new Date().toISOString(),
-      userEmail: usuario.email,
+      userEmail: user?.username || 'usuario',
       items: carrito,
       total: totalPrecio
     };

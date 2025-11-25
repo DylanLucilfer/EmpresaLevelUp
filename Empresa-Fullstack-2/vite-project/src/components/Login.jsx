@@ -1,32 +1,29 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 function Login() {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [mensaje, setMensaje] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
   
   const navigate = useNavigate();
+  const { login } = useAuth();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const usuarioGuardado = JSON.parse(localStorage.getItem("usuario"));
-
-    if (!usuarioGuardado) {
-      setMensaje({ tipo: 'danger', texto: '❌ No hay usuarios registrados.' });
-      return;
-    }
-
-    if (email === usuarioGuardado.email && password === usuarioGuardado.password) {
-      localStorage.setItem("sesion", "true");
-      setMensaje({ tipo: 'success', texto: '✅ Login exitoso. Redirigiendo...' });
-      
-      setTimeout(() => {
-        navigate('/'); 
-      }, 1000);
-
-    } else {
-      setMensaje({ tipo: 'danger', texto: '❌ Email o contraseña incorrectos.' });
+    try {
+      setSubmitting(true);
+      const credentials = { username: username.trim(), password };
+      await login(credentials);
+      setMensaje({ tipo: 'success', texto: '✅ Sesión iniciada. Redirigiendo...' });
+      setTimeout(() => navigate('/'), 1200);
+    } catch (error) {
+      const apiMessage = error?.response?.data?.error || '❌ Credenciales inválidas.';
+      setMensaje({ tipo: 'danger', texto: apiMessage });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -37,14 +34,14 @@ function Login() {
         <div className="col-md-6 col-lg-5">
           <form onSubmit={handleSubmit} className="p-4 border rounded-3 bg-light shadow">
             <div className="mb-3">
-              <label htmlFor="email" className="form-label">Correo electrónico</label>
+              <label htmlFor="username" className="form-label">Usuario o correo</label>
               <input
-                type="email"
+                type="text"
                 className="form-control"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="correo@ejemplo.com"
+                id="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="tu_usuario"
                 required
               />
             </div>
@@ -60,7 +57,9 @@ function Login() {
                 required
               />
             </div>
-            <button type="submit" className="btn btn-dark w-100">Ingresar</button>
+            <button type="submit" className="btn btn-dark w-100" disabled={submitting}>
+              {submitting ? 'Ingresando...' : 'Ingresar'}
+            </button>
             {mensaje && (
               <p className={`mt-3 text-center text-${mensaje.tipo}`}>
                 {mensaje.texto}

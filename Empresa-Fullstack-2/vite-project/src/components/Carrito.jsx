@@ -1,5 +1,6 @@
 import React from 'react';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 
 function Carrito() {
@@ -12,12 +13,12 @@ function Carrito() {
   } = useCart();
   
   const navigate = useNavigate();
+  const { permissions } = useAuth();
+  const canCheckout = permissions.canCheckout;
 
   const fmtCLP = new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 });
   const handleCheckout = () => {
-    const sesionActiva = localStorage.getItem("sesion") === "true";
-
-    if (sesionActiva) {
+    if (canCheckout) {
       navigate('/checkout');
     } else {
       alert('Debes iniciar sesión para proceder al pago.');
